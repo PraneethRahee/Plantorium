@@ -6,6 +6,23 @@ import './Preloader.css'
 
 gsap.registerPlugin(CustomEase, SplitText)
 
+const PlantSvg = () => (
+  <svg className="pl-plant-svg" viewBox="0 0 48 64" fill="none" aria-hidden>
+    <path
+      className="pl-plant-stem"
+      d="M24 56 L24 8"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+    />
+    <ellipse className="pl-plant-leaf pl-plant-leaf-1" cx="24" cy="14" rx="8" ry="5" fill="currentColor" />
+    <ellipse className="pl-plant-leaf pl-plant-leaf-2" cx="18" cy="24" rx="6" ry="4" fill="currentColor" transform="rotate(-25 18 24)" />
+    <ellipse className="pl-plant-leaf pl-plant-leaf-3" cx="30" cy="24" rx="6" ry="4" fill="currentColor" transform="rotate(25 30 24)" />
+    <ellipse className="pl-plant-leaf pl-plant-leaf-4" cx="16" cy="36" rx="7" ry="4" fill="currentColor" transform="rotate(-15 16 36)" />
+    <ellipse className="pl-plant-leaf pl-plant-leaf-5" cx="32" cy="36" rx="7" ry="4" fill="currentColor" transform="rotate(15 32 36)" />
+  </svg>
+)
+
 export const Preloader = ({ onComplete }) => {
   const hasCompleted = useRef(false)
 
@@ -27,7 +44,7 @@ export const Preloader = ({ onComplete }) => {
 
     splitTitle.chars.forEach((char) => {
       const text = char.textContent
-      char.innerHTML = `<span>${text}</span>`
+      char.innerHTML = `<span class="pl-char-inner">${text}</span>`
     })
 
     const splitTags = []
@@ -39,6 +56,10 @@ export const Preloader = ({ onComplete }) => {
     const tl = gsap.timeline({ defaults: { ease: 'hop' } })
     const tags = gsap.utils.toArray('.pl-tag')
 
+    gsap.set('.pl-plant-wrap', { scaleY: 0, transformOrigin: 'center bottom' })
+    gsap.set('.pl-plant-stem', { strokeDasharray: 50, strokeDashoffset: 50 })
+    gsap.set('.pl-plant-leaf', { scale: 0, transformOrigin: 'center center' })
+
     tags.forEach((tag, index) => {
       tl.to(
         tag.querySelectorAll('p .pl-word'),
@@ -48,36 +69,62 @@ export const Preloader = ({ onComplete }) => {
     })
 
     tl.to(
-      '.pl-preloader .pl-char span',
-      { y: '0%', duration: 0.75, stagger: 0.04 },
+      '.pl-preloader .pl-char-inner',
+      { y: '0%', duration: 0.8, stagger: 0.03 },
       0.5
     )
 
     tl.to(
       '.pl-line',
-      { width: isMobile ? '120px' : '200px', duration: 2, ease: 'power2.inOut' },
+      { width: isMobile ? '120px' : '200px', duration: 2.5, ease: 'power2.inOut' },
       0.5
     )
 
+    tl.to('.pl-preloader .pl-title h1', {
+      color: '#6b8f3c',
+      duration: 1,
+      ease: 'power2.inOut',
+    }, 2)
+
+    tl.to('.pl-preloader .pl-title h1', {
+      color: '#a7c463',
+      duration: 0.8,
+    }, 3)
+
+    tl.to('.pl-plant-wrap', {
+      scaleY: 1,
+      duration: 2.5,
+      ease: 'power2.out',
+    }, 3)
+
+    tl.to('.pl-plant-stem', {
+      strokeDashoffset: 0,
+      duration: 1.8,
+      ease: 'power2.inOut',
+    }, 3.2)
+
+    tl.to('.pl-plant-leaf', {
+      scale: 1,
+      duration: 1.2,
+      stagger: 0.2,
+      ease: 'back.out(1.4)',
+    }, 4.2)
+
+    tl.to('.pl-line', { width: 0, opacity: 0, duration: 0.5 }, 5.5)
+
     tl.to(
-      '.pl-preloader .pl-char span',
+      '.pl-preloader .pl-char-inner',
       { y: '100%', duration: 0.75, stagger: 0.025 },
-      2.8
+      5.5
     )
 
     tags.forEach((tag, index) => {
       tl.to(
         tag.querySelectorAll('p .pl-word'),
         { y: '100%', duration: 0.75 },
-        2.8 + index * 0.1
+        5.5 + index * 0.1
       )
     })
-
-    tl.to(
-      '.pl-line',
-      { width: 0, opacity: 0, duration: 0.5 },
-      2.8
-    )
 
     tl.add(() => {
       gsap.set('.pl-preloader', {
@@ -86,7 +133,7 @@ export const Preloader = ({ onComplete }) => {
       gsap.set('.pl-split-overlay', {
         clipPath: 'polygon(0 50%, 100% 50%, 100% 100%, 0% 100%)',
       })
-    }, 3.8)
+    }, 6.5)
 
     tl.to(
       '.main-content',
@@ -94,7 +141,7 @@ export const Preloader = ({ onComplete }) => {
         clipPath: 'polygon(0 48%, 100% 48%, 100% 52%, 0% 52%)',
         duration: 0.5,
       },
-      3.8
+      6.5
     )
 
     tl.to(
@@ -103,7 +150,7 @@ export const Preloader = ({ onComplete }) => {
         y: (i) => (i === 0 ? '-50%' : '50%'),
         duration: 1,
       },
-      4.3
+      7
     )
 
     tl.to(
@@ -118,7 +165,7 @@ export const Preloader = ({ onComplete }) => {
           onComplete?.()
         },
       },
-      4.3
+      7
     )
 
     return () => {
@@ -139,6 +186,9 @@ export const Preloader = ({ onComplete }) => {
           <h1>Plantorium</h1>
         </div>
         <div className="pl-line" />
+        <div className="pl-plant-wrap">
+          <PlantSvg />
+        </div>
       </div>
       <div className="pl-split-overlay" />
       <div className="pl-tags-overlay">

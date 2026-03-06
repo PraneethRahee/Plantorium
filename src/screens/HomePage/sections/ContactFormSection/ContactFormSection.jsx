@@ -1,18 +1,25 @@
 import { useRef, useState } from "react";
-import { PlayIcon, PauseIcon } from "lucide-react";
+import emailjs from "@emailjs/browser";
+import { PlayIcon, PauseIcon, CheckCircleIcon, AlertCircleIcon, LoaderIcon } from "lucide-react";
 import { Button } from "../../../../components/ui/button";
 import { Input } from "../../../../components/ui/input";
 import { Textarea } from "../../../../components/ui/textarea";
 
+const EMAILJS_SERVICE_ID = "service_qsz2plw";
+const EMAILJS_TEMPLATE_ID = "template_1b7nthe";
+const EMAILJS_PUBLIC_KEY = "xn8DCCXCOS0sNoNC0";
+
 const formFields = [
-  { placeholder: "Your Name", type: "text" },
-  { placeholder: "Email Address", type: "email" },
-  { placeholder: "Company Name", type: "text" },
+  { placeholder: "Your Name", type: "text", name: "from_name" },
+  { placeholder: "Email Address", type: "email", name: "reply_to" },
+  { placeholder: "Company Name", type: "text", name: "company_name" },
 ];
 
 export const ContactFormSection = () => {
   const videoRef = useRef(null);
+  const formRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(true);
+  const [sendStatus, setSendStatus] = useState("idle");
 
   const togglePlay = () => {
     const video = videoRef.current;
@@ -23,6 +30,28 @@ export const ContactFormSection = () => {
     } else {
       video.pause();
       setIsPlaying(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (sendStatus === "sending") return;
+
+    setSendStatus("sending");
+
+    try {
+      await emailjs.sendForm(
+        EMAILJS_SERVICE_ID,
+        EMAILJS_TEMPLATE_ID,
+        formRef.current,
+        EMAILJS_PUBLIC_KEY
+      );
+      setSendStatus("success");
+      formRef.current.reset();
+      setTimeout(() => setSendStatus("idle"), 4000);
+    } catch {
+      setSendStatus("error");
+      setTimeout(() => setSendStatus("idle"), 4000);
     }
   };
 
@@ -43,39 +72,71 @@ export const ContactFormSection = () => {
               </div>
             </header>
 
-            <form className="flex flex-col gap-6">
+            <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-6">
+              <input type="hidden" name="to_name" value="Plantorium" />
               {formFields.map((field, index) => (
                 <Input
                   key={index}
                   type={field.type}
+                  name={field.name}
                   placeholder={field.placeholder}
+                  required
                   className="h-[60px] rounded-md border-[#dcdfe4] font-global-tokens-body-b-2 font-[number:var(--global-tokens-body-b-2-font-weight)] text-[#758195] text-[length:var(--global-tokens-body-b-2-font-size)] tracking-[var(--global-tokens-body-b-2-letter-spacing)] leading-[var(--global-tokens-body-b-2-line-height)] [font-style:var(--global-tokens-body-b-2-font-style)]"
                 />
               ))}
 
               <Textarea
+                name="message"
                 placeholder="Your Message"
+                required
                 className="h-[200px] rounded-md border-[#dcdfe4] font-global-tokens-body-b-2 font-[number:var(--global-tokens-body-b-2-font-weight)] text-[#758195] text-[length:var(--global-tokens-body-b-2-font-size)] tracking-[var(--global-tokens-body-b-2-letter-spacing)] leading-[var(--global-tokens-body-b-2-line-height)] [font-style:var(--global-tokens-body-b-2-font-style)] resize-none"
               />
 
-              <Button
-                type="submit"
-                className="group/btn inline-flex items-center gap-[18px] px-[25px] py-[19px] h-auto bg-[#d1f57c] rounded-[300px] hover:bg-[#c5e970] transition-all duration-300 w-fit"
-              >
-                <span className="relative inline-flex overflow-hidden [font-family:'Bricolage_Grotesque',Helvetica] font-semibold text-[#172b4d] text-lg tracking-[0] leading-[21.6px]">
-                  <div className="translate-y-0 skew-y-0 transition duration-500 group-hover/btn:translate-y-[-160%] group-hover/btn:skew-y-12">
-                    Submit
-                  </div>
-                  <div className="absolute translate-y-[164%] skew-y-12 transition duration-500 group-hover/btn:translate-y-0 group-hover/btn:skew-y-0">
-                    Submit
-                  </div>
-                </span>
-                <img
-                  className="w-3.5 h-3.5 transition-transform duration-500 group-hover/btn:scale-150 group-hover/btn:rotate-45"
-                  alt="Icon"
-                  src="https://c.animaapp.com/mm91avyrvgFAYy/img/icon.svg"
-                />
-              </Button>
+              <div className="flex items-center gap-4">
+                <Button
+                  type="submit"
+                  disabled={sendStatus === "sending"}
+                  className="group/btn inline-flex items-center gap-[18px] px-[25px] py-[19px] h-auto bg-[#d1f57c] rounded-[300px] hover:bg-[#c5e970] transition-all duration-300 w-fit disabled:opacity-70"
+                >
+                  <span className="relative inline-flex overflow-hidden [font-family:'Bricolage_Grotesque',Helvetica] font-semibold text-[#172b4d] text-lg tracking-[0] leading-[21.6px]">
+                    {sendStatus === "sending" ? (
+                      <div className="flex items-center gap-2">
+                        <LoaderIcon className="w-4 h-4 animate-spin" />
+                        Sending...
+                      </div>
+                    ) : (
+                      <>
+                        <div className="translate-y-0 skew-y-0 transition duration-500 group-hover/btn:translate-y-[-160%] group-hover/btn:skew-y-12">
+                          Submit
+                        </div>
+                        <div className="absolute translate-y-[164%] skew-y-12 transition duration-500 group-hover/btn:translate-y-0 group-hover/btn:skew-y-0">
+                          Submit
+                        </div>
+                      </>
+                    )}
+                  </span>
+                  {sendStatus !== "sending" && (
+                    <img
+                      className="w-3.5 h-3.5 transition-transform duration-500 group-hover/btn:scale-150 group-hover/btn:rotate-45"
+                      alt="Icon"
+                      src="https://c.animaapp.com/mm91avyrvgFAYy/img/icon.svg"
+                    />
+                  )}
+                </Button>
+
+                {sendStatus === "success" && (
+                  <span className="flex items-center gap-2 text-green-600 [font-family:'Funnel_Sans',Helvetica] text-sm font-medium animate-fade-in">
+                    <CheckCircleIcon className="w-4 h-4" />
+                    Message sent successfully!
+                  </span>
+                )}
+                {sendStatus === "error" && (
+                  <span className="flex items-center gap-2 text-red-500 [font-family:'Funnel_Sans',Helvetica] text-sm font-medium animate-fade-in">
+                    <AlertCircleIcon className="w-4 h-4" />
+                    Failed to send. Please try again.
+                  </span>
+                )}
+              </div>
             </form>
           </div>
 

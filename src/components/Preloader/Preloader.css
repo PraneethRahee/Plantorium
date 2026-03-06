@@ -51,6 +51,21 @@
   background-color: #a7c463;
 }
 
+.pl-plant-wrap {
+  position: absolute;
+  bottom: 15%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 48px;
+  height: 64px;
+}
+
+.pl-plant-svg {
+  width: 100%;
+  height: 100%;
+  color: #a7c463;
+}
+
 .pl-tag {
   position: absolute;
   width: max-content;
@@ -88,7 +103,7 @@
   margin-top: 0.75rem;
 }
 
-.pl-char span {
+.pl-char-inner {
   position: relative;
   display: inline-block;
   transform: translateY(-100%);
@@ -109,6 +124,11 @@
 
   .pl-line {
     top: calc(50% + 2rem);
+  }
+
+  .pl-plant-wrap {
+    width: 36px;
+    height: 48px;
   }
 
   .pl-char {
