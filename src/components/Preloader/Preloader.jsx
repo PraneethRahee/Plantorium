@@ -6,8 +6,27 @@ import './Preloader.css'
 
 gsap.registerPlugin(CustomEase, SplitText)
 
+const HumanSvg = () => (
+  <svg viewBox="0 0 44 58" fill="none" className="pl-human-svg" aria-hidden>
+    <ellipse cx="22" cy="6" rx="10" ry="4" fill="#3d2c1f" />
+    <path d="M12 6 Q22 0 32 6 L30 10 Q22 14 14 10 Z" fill="#5a3d28" stroke="#3d2c1f" strokeWidth="0.5" />
+
+    <circle cx="22" cy="12" r="5" fill="#d4a574" />
+
+    <rect x="20" y="17" width="4" height="4" rx="1" fill="#d4a574" />
+    <path d="M14 21 L12 36 L22 38 L32 36 L30 21 Z" fill="#4a6b3c" stroke="#3d5a30" strokeWidth="0.5" />
+    <path d="M12 24 L4 38" stroke="#4a6b3c" strokeWidth="2.5" strokeLinecap="round" className="pl-human-arm-plant" />
+    <path d="M30 25 L38 30" stroke="#4a6b3c" strokeWidth="2" strokeLinecap="round" />
+    <path d="M36 28 L40 28 L40 34 L36 34 Z" fill="#5a4a3a" stroke="#4a3a2a" strokeWidth="0.5" rx="1" />
+    <circle cx="38" cy="26" r="1.5" fill="#6b5a4a" />
+    <path d="M14 36 L12 52 M30 36 L32 52" stroke="#2d3a1f" strokeWidth="3.5" strokeLinecap="round" />
+    <ellipse cx="12" cy="53" rx="3" ry="1.5" fill="#3d2c1f" />
+    <ellipse cx="32" cy="53" rx="3" ry="1.5" fill="#3d2c1f" />
+  </svg>
+)
+
 const PlantSvg = () => (
-  <svg className="pl-plant-svg" viewBox="0 0 48 64" fill="none" aria-hidden>
+  <svg viewBox="0 0 48 64" fill="none" className="pl-sapling-svg" aria-hidden>
     <path
       className="pl-plant-stem"
       d="M24 56 L24 8"
@@ -23,8 +42,17 @@ const PlantSvg = () => (
   </svg>
 )
 
+const PLANT_SPOTS = [
+  { left: '22%' },
+  { left: '48%' },
+  { left: '74%' },
+]
+
 export const Preloader = ({ onComplete }) => {
   const hasCompleted = useRef(false)
+  const humanRef = useRef(null)
+  const seedRefs = useRef([])
+  const treeRefs = useRef([])
 
   useLayoutEffect(() => {
     document.body.style.overflow = 'hidden'
@@ -55,74 +83,101 @@ export const Preloader = ({ onComplete }) => {
     const isMobile = window.innerWidth <= 1000
     const tl = gsap.timeline({ defaults: { ease: 'hop' } })
     const tags = gsap.utils.toArray('.pl-tag')
+    const human = humanRef.current
+    const seeds = seedRefs.current.filter(Boolean)
+    const trees = treeRefs.current.filter(Boolean)
 
-    gsap.set('.pl-plant-wrap', { scaleY: 0, transformOrigin: 'center bottom' })
-    gsap.set('.pl-plant-stem', { strokeDasharray: 50, strokeDashoffset: 50 })
-    gsap.set('.pl-plant-leaf', { scale: 0, transformOrigin: 'center center' })
+    gsap.set(human, { left: '-8%' })
+    gsap.set(seeds, { y: -20, opacity: 0 })
+    gsap.set(trees, { scaleY: 0, transformOrigin: 'center bottom' })
+    gsap.set('.pl-sapling .pl-plant-stem', { strokeDasharray: 50, strokeDashoffset: 50 })
+    gsap.set('.pl-sapling .pl-plant-leaf', { scale: 0, transformOrigin: 'center center' })
 
     tags.forEach((tag, index) => {
       tl.to(
         tag.querySelectorAll('p .pl-word'),
-        { y: '0%', duration: 0.75 },
-        0.5 + index * 0.1
+        { y: '0%', duration: 0.8 },
+        0.4 + index * 0.12
       )
     })
 
     tl.to(
       '.pl-preloader .pl-char-inner',
-      { y: '0%', duration: 0.8, stagger: 0.03 },
-      0.5
+      { y: '0%', duration: 0.9, stagger: 0.04 },
+      0.4
     )
 
     tl.to(
       '.pl-line',
       { width: isMobile ? '120px' : '200px', duration: 2.5, ease: 'power2.inOut' },
-      0.5
+      0.4
     )
 
-    tl.to('.pl-preloader .pl-title h1', {
-      color: '#6b8f3c',
-      duration: 1,
-      ease: 'power2.inOut',
-    }, 2)
-
-    tl.to('.pl-preloader .pl-title h1', {
+    tl.to('.pl-preloader .pl-char', {
       color: '#a7c463',
-      duration: 0.8,
-    }, 3)
-
-    tl.to('.pl-plant-wrap', {
-      scaleY: 1,
-      duration: 2.5,
-      ease: 'power2.out',
-    }, 3)
-
-    tl.to('.pl-plant-stem', {
-      strokeDashoffset: 0,
-      duration: 1.8,
+      duration: 0.25,
+      stagger: 0.06,
       ease: 'power2.inOut',
-    }, 3.2)
+    }, 3)
 
-    tl.to('.pl-plant-leaf', {
-      scale: 1,
-      duration: 1.2,
-      stagger: 0.2,
-      ease: 'back.out(1.4)',
-    }, 4.2)
+    tl.to(human, { left: '22%', duration: 0.5, ease: 'power2.inOut' }, 3)
 
-    tl.to('.pl-line', { width: 0, opacity: 0, duration: 0.5 }, 5.5)
+    tl.to(human, { rotation: 25, transformOrigin: 'center bottom', duration: 0.08 }, 3.5)
+    tl.to('.pl-human-arm-plant', { rotation: 45, transformOrigin: '12px 24px', duration: 0.08 }, 3.5)
+    tl.to(seeds[0], { opacity: 1, y: 0, duration: 0.12, ease: 'power2.in' }, 3.55)
+    tl.to(human, { rotation: 0, duration: 0.06 }, 3.65)
+    tl.to('.pl-human-arm-plant', { rotation: 0, duration: 0.06 }, 3.65)
+
+    tl.to(human, { left: '48%', duration: 0.45, ease: 'power2.inOut' }, 3.72)
+    tl.to(human, { rotation: 25, transformOrigin: 'center bottom', duration: 0.08 }, 4.17)
+    tl.to('.pl-human-arm-plant', { rotation: 45, transformOrigin: '12px 24px', duration: 0.08 }, 4.17)
+    tl.to(seeds[1], { opacity: 1, y: 0, duration: 0.12, ease: 'power2.in' }, 4.22)
+    tl.to(human, { rotation: 0, duration: 0.06 }, 4.32)
+    tl.to('.pl-human-arm-plant', { rotation: 0, duration: 0.06 }, 4.32)
+
+    tl.to(human, { left: '74%', duration: 0.45, ease: 'power2.inOut' }, 4.39)
+    tl.to(human, { rotation: 25, transformOrigin: 'center bottom', duration: 0.08 }, 4.84)
+    tl.to('.pl-human-arm-plant', { rotation: 45, transformOrigin: '12px 24px', duration: 0.08 }, 4.84)
+    tl.to(seeds[2], { opacity: 1, y: 0, duration: 0.12, ease: 'power2.in' }, 4.89)
+    tl.to(human, { rotation: 0, duration: 0.06 }, 4.99)
+    tl.to('.pl-human-arm-plant', { rotation: 0, duration: 0.06 }, 4.99)
+
+    tl.to(human, { left: '105%', duration: 0.4, ease: 'power2.in' }, 5.05)
+
+    trees.forEach((tree, i) => {
+      const stem = tree.querySelector('.pl-plant-stem')
+      const leaves = tree.querySelectorAll('.pl-plant-leaf')
+      tl.to(tree, {
+        scaleY: 1,
+        duration: 0.9,
+        ease: 'power2.out',
+      }, 5.5 + i * 0.15)
+      tl.to(stem, {
+        strokeDashoffset: 0,
+        duration: 0.7,
+        ease: 'power2.inOut',
+      }, 5.6 + i * 0.15)
+      tl.to(leaves, {
+        scale: 1,
+        duration: 0.5,
+        stagger: 0.08,
+        ease: 'back.out(1.4)',
+      }, 6.1 + i * 0.15)
+    })
+
+    tl.to('.pl-line', { width: 0, opacity: 0, duration: 0.25 }, 7.2)
 
     tl.to(
       '.pl-preloader .pl-char-inner',
-      { y: '100%', duration: 0.75, stagger: 0.025 },
-      5.5
+      { y: '100%', duration: 0.4, stagger: 0.02 },
+      7.2
     )
 
     tags.forEach((tag, index) => {
       tl.to(
         tag.querySelectorAll('p .pl-word'),
-        { y: '100%', duration: 0.75 },
-        5.5 + index * 0.1
+        { y: '100%', duration: 0.4 },
+        7.2 + index * 0.06
       )
     })
 
@@ -133,7 +188,7 @@ export const Preloader = ({ onComplete }) => {
       gsap.set('.pl-split-overlay', {
         clipPath: 'polygon(0 50%, 100% 50%, 100% 100%, 0% 100%)',
       })
-    }, 6.5)
+    }, 7.65)
 
     tl.to(
       '.main-content',
@@ -141,23 +196,23 @@ export const Preloader = ({ onComplete }) => {
         clipPath: 'polygon(0 48%, 100% 48%, 100% 52%, 0% 52%)',
         duration: 0.5,
       },
-      6.5
+      7.65
     )
 
     tl.to(
       ['.pl-preloader', '.pl-split-overlay'],
       {
         y: (i) => (i === 0 ? '-50%' : '50%'),
-        duration: 1,
+        duration: 0.7,
       },
-      7
+      8.15
     )
 
     tl.to(
       '.main-content',
       {
         clipPath: 'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)',
-        duration: 1,
+        duration: 0.7,
         onComplete: () => {
           hasCompleted.current = true
           document.body.style.overflow = ''
@@ -165,7 +220,7 @@ export const Preloader = ({ onComplete }) => {
           onComplete?.()
         },
       },
-      7
+      8.15
     )
 
     return () => {
@@ -186,8 +241,31 @@ export const Preloader = ({ onComplete }) => {
           <h1>Plantorium</h1>
         </div>
         <div className="pl-line" />
-        <div className="pl-plant-wrap">
-          <PlantSvg />
+        <div className="pl-ground-scene">
+          <div className="pl-ground" />
+          {PLANT_SPOTS.map((_, i) => (
+            <div
+              key={`seed-${i}`}
+              ref={(el) => (seedRefs.current[i] = el)}
+              className="pl-seed"
+              style={{ left: PLANT_SPOTS[i].left }}
+            >
+              <div className="pl-seed-dot" />
+            </div>
+          ))}
+          {PLANT_SPOTS.map((_, i) => (
+            <div
+              key={`tree-${i}`}
+              ref={(el) => (treeRefs.current[i] = el)}
+              className="pl-sapling"
+              style={{ left: PLANT_SPOTS[i].left }}
+            >
+              <PlantSvg />
+            </div>
+          ))}
+          <div ref={humanRef} className="pl-human">
+            <HumanSvg />
+          </div>
         </div>
       </div>
       <div className="pl-split-overlay" />
