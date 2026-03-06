@@ -1,16 +1,39 @@
-# React + Vite
+# Plantorium
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A React landing page for a planting/landscaping brand, featuring animations, contact forms, and smooth scrolling.
 
-Currently, two official plugins are available:
+## How to Run
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+```bash
+# Install dependencies
+npm install
 
-## React Compiler
+# Start development server
+npm run dev
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+The app will be available at `http://localhost:5173` (or the port Vite assigns).
 
-## Expanding the ESLint configuration
+```bash
+# Build for production
+npm run build
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+# Preview production build locally
+npm run preview
+
+# Run ESLint
+npm run lint
+```
+
+## Tech Stack
+
+| Category      | Technology |
+|---------------|------------|
+| **Framework** | React 19 |
+| **Build**     | Vite 7 |
+| **Styling**   | Tailwind CSS, tailwindcss-animate, PostCSS, Autoprefixer |
+| **Animation** | GSAP, Lenis (smooth scroll) |
+| **UI**        | Radix UI (Avatar, Separator, Slot), Lucide React (icons), class-variance-authority, clsx, tailwind-merge |
+| **Email**     | EmailJS (contact form) |
+| **Routing**   | React Router DOM |
+| **Linting**   | ESLint |

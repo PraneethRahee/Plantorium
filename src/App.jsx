@@ -1,7 +1,11 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef, memo } from 'react'
 import Lenis from 'lenis'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import 'lenis/dist/lenis.css'
 import { Preloader } from './components/Preloader'
+import { ScrollProgress } from './components/ScrollProgress'
+import './components/ScrollProgress/ScrollProgress.css'
 import { HeroSection } from './screens/HomePage/sections/HeroSection'
 import { FeaturesSection } from './screens/HomePage/sections/FeaturesSection'
 import { ProjectAndInquirySection } from './screens/HomePage/sections/ProjectAndInquirySection'
@@ -10,8 +14,19 @@ import { ContactFormSection } from './screens/HomePage/sections/ContactFormSecti
 import { SiteReviewSection } from './screens/HomePage/sections/SiteReviewSection'
 import { FooterSection } from './screens/HomePage/sections/FooterSection'
 
+gsap.registerPlugin(ScrollTrigger)
+
+const MemoHero = memo(HeroSection)
+const MemoFeatures = memo(FeaturesSection)
+const MemoProject = memo(ProjectAndInquirySection)
+const MemoLatest = memo(LatestProjectSnapshotSection)
+const MemoContact = memo(ContactFormSection)
+const MemoSiteReview = memo(SiteReviewSection)
+const MemoFooter = memo(FooterSection)
+
 function App() {
   const [isLoading, setIsLoading] = useState(true)
+  const progressFillRef = useRef(null)
 
   const handlePreloaderComplete = useCallback(() => {
     setIsLoading(false)
@@ -26,26 +41,34 @@ function App() {
       smooth: true,
     })
 
-    function raf(time) {
-      lenis.raf(time)
-      requestAnimationFrame(raf)
-    }
-    requestAnimationFrame(raf)
+    lenis.on('scroll', (e) => {
+      ScrollTrigger.update()
+      const fill = progressFillRef.current
+      if (fill) fill.style.transform = `scaleX(${e.progress})`
+    })
 
-    return () => lenis.destroy()
+    const raf = (time) => lenis.raf(time * 1000)
+    gsap.ticker.add(raf)
+    gsap.ticker.lagSmoothing(0)
+
+    return () => {
+      gsap.ticker.remove(raf)
+      lenis.destroy()
+    }
   }, [isLoading])
 
   return (
     <>
       {isLoading && <Preloader onComplete={handlePreloaderComplete} />}
+      {!isLoading && <ScrollProgress fillRef={progressFillRef} />}
       <div className="main-content flex flex-col w-full">
-        <HeroSection />
-        <FeaturesSection />
-        <ProjectAndInquirySection />
-        <LatestProjectSnapshotSection />
-        <ContactFormSection />
-        <SiteReviewSection />
-        <FooterSection />
+        <MemoHero />
+        <MemoFeatures />
+        <MemoProject />
+        <MemoLatest />
+        <MemoContact />
+        <MemoSiteReview />
+        <MemoFooter />
       </div>
     </>
   )

@@ -117,6 +117,7 @@ export const LatestProjectSnapshotSection = () => {
                         src={img.src}
                         alt={img.alt}
                         className="w-full h-full object-cover"
+                        loading="lazy"
                       />
                     </div>
                   ))}
@@ -137,6 +138,7 @@ export const LatestProjectSnapshotSection = () => {
                         src={img.src}
                         alt={img.alt}
                         className="w-full h-full object-cover"
+                        loading="lazy"
                       />
                     </div>
                   ))}

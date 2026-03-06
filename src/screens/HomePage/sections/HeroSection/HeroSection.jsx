@@ -142,6 +142,8 @@ export const HeroSection = () => {
               alt={`slide-${i + 1}`}
               className="absolute w-full h-full object-cover"
               style={{ top: 0 }}
+              loading={i === 0 ? "eager" : "lazy"}
+              fetchPriority={i === 0 ? "high" : "low"}
             />
           </div>
         ))}

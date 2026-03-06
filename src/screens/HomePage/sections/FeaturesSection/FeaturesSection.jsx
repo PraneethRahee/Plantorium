@@ -44,6 +44,7 @@ export const FeaturesSection = () => {
                     src={logo.src}
                     alt={logo.name}
                     className="h-10 max-w-[160px] object-contain"
+                    loading="lazy"
                   />
                   <span className="text-[13px] font-bold tracking-wide uppercase whitespace-nowrap text-[#4a7c10] opacity-0 translate-y-3 scale-90 group-hover/logo:opacity-100 group-hover/logo:translate-y-0 group-hover/logo:scale-100 transition-all duration-500 ease-out">
                     {logo.name}
