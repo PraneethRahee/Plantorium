@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Plantorium Admin</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 24px; background: #f5f5f5; }
+    h1 { color: #172b4d; margin-bottom: 8px; }
+    .subtitle { color: #758195; margin-bottom: 24px; }
+    .section { background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .section h2 { color: #172b4d; font-size: 1.1rem; margin: 0 0 16px 0; padding-bottom: 8px; border-bottom: 1px solid #e0e0e0; }
+    label { display: block; font-weight: 500; color: #44546f; margin-bottom: 4px; font-size: 14px; }
+    input[type="text"], input[type="url"], textarea { width: 100%; padding: 10px 12px; border: 1px solid #dcdfe4; border-radius: 6px; margin-bottom: 12px; font-size: 14px; }
+    textarea { min-height: 80px; resize: vertical; }
+    button { background: #a7c463; color: #172b4d; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px; }
+    button:hover { background: #9bb856; }
+    button.secondary { background: #e8f0cc; }
+    button.danger { background: #f44336; color: white; }
+    button.danger:hover { background: #d32f2f; }
+    .form-row { display: flex; gap: 12px; align-items: flex-end; margin-bottom: 12px; flex-wrap: wrap; }
+    .form-row input, .form-row textarea { flex: 1; min-width: 200px; margin-bottom: 0; }
+    .form-row button { flex-shrink: 0; }
+    .item-list { margin-bottom: 12px; }
+    .item-card { display: flex; gap: 12px; align-items: center; padding: 12px; background: #f9fafb; border-radius: 6px; margin-bottom: 8px; border: 1px solid #e5e7eb; }
+    .item-card img { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; }
+    .item-card .info { flex: 1; min-width: 0; }
+    .item-card .info span { display: block; font-size: 13px; color: #44546f; overflow: hidden; text-overflow: ellipsis; }
+    .item-card .actions { display: flex; gap: 8px; }
+    .media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-bottom: 16px; }
+    .media-card { position: relative; border-radius: 8px; overflow: hidden; border: 1px solid #e5e7eb; background: #e5e7eb; width: 100%; min-height: 180px; aspect-ratio: 1; }
+    .media-card img, .media-card video { width: 100%; height: 100%; object-fit: cover; display: block; min-height: 180px; }
+    .media-card .delete-btn { position: absolute; top: 6px; right: 6px; width: 28px; height: 28px; padding: 0; border-radius: 4px; font-size: 14px; line-height: 1; cursor: pointer; z-index: 2; }
+    .media-card .select-cb { position: absolute; top: 6px; left: 6px; width: 20px; height: 20px; accent-color: #a7c463; cursor: pointer; z-index: 2; }
+    .media-card.selected { outline: 3px solid #a7c463; outline-offset: 2px; }
+    .select-actions { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+    .select-actions .count { font-size: 13px; color: #758195; }
+    .item-card.selected { outline: 2px solid #a7c463; }
+    .media-card .media-label { position: absolute; bottom: 0; left: 0; right: 0; padding: 6px 8px; background: rgba(0,0,0,0.6); color: white; font-size: 11px; }
+    .msg { padding: 10px 14px; border-radius: 6px; margin-bottom: 12px; font-size: 14px; }
+    .msg.success { background: #d4edda; color: #155724; }
+    .msg.error { background: #f8d7da; color: #721c24; }
+    .msg.info { background: #d1ecf1; color: #0c5460; }
+    .tabs { display: flex; gap: 4px; margin-bottom: 20px; flex-wrap: wrap; }
+    .tab { padding: 10px 18px; background: white; border: 1px solid #e0e0e0; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; }
+    .tab:hover { background: #f9fafb; }
+    .tab.active { background: #a7c463; color: #172b4d; border-color: #a7c463; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .api-url { font-size: 12px; color: #758195; margin-top: 8px; }
+    .api-url code { background: #e8e8e8; padding: 2px 6px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div id="adminGate" style="display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,0.4); align-items:center; justify-content:center;">
+    <div style="max-width:360px; padding:24px; background:white; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+    <h2 style="margin:0 0 8px; color:#172b4d;">Admin Access</h2>
+    <p style="color:#758195; font-size:14px; margin:0 0 16px;">Enter the admin key to make changes.</p>
+    <input type="password" id="adminKeyInput" placeholder="Admin key" style="width:100%; padding:10px 12px; border:1px solid #dcdfe4; border-radius:6px; margin-bottom:12px; font-size:14px;" />
+    <button onclick="submitAdminKey()" style="width:100%; padding:10px; background:#a7c463; color:#172b4d; border:none; border-radius:6px; font-weight:600; cursor:pointer;">Continue</button>
+    <p id="gateError" style="color:#d32f2f; font-size:13px; margin:12px 0 0; display:none;"></p>
+    </div>
+  </div>
+
+  <div id="adminMain">
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
+    <div>
+      <h1 style="margin:0 0 4px;">Plantorium Admin</h1>
+      <p class="subtitle" style="margin:0;">Manage hero images, features, projects, contact, and footer content</p>
+      <p class="api-url" style="margin:8px 0 0;">API Base: <code id="apiBase">/api</code></p>
+    </div>
+    <button id="logoutBtn" onclick="logoutAdmin()" class="secondary" style="display:none; align-self:center;">Log out</button>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="hero">Hero</div>
+    <div class="tab" data-tab="features">Features</div>
+    <div class="tab" data-tab="project">Project</div>
+    <div class="tab" data-tab="latest">Latest Projects</div>
+    <div class="tab" data-tab="siteReview">Site Review</div>
+    <div class="tab" data-tab="contact">Contact</div>
+    <div class="tab" data-tab="footer">Footer</div>
+  </div>
+
+  <div id="msg"></div>
+
+  <!-- Hero -->
+  <div class="tab-content active" id="tab-hero">
+    <div class="section">
+      <h2>Main Heading</h2>
+      <input type="text" id="heroMainHeading" placeholder="Reliable Planting Execution" />
+      <button onclick="saveHeroHeading()">Save</button>
+    </div>
+    <div class="section">
+      <h2>Hero Slider Images</h2>
+      <div class="item-list" id="heroImagesList"></div>
+      <div class="form-row">
+        <input type="file" id="heroImageInput" accept="image/*,video/*" />
+        <button onclick="addHeroImage()">Add Image</button>
+        <input type="url" id="heroImageUrl" placeholder="Or paste image URL" style="min-width:200px" />
+        <button class="secondary" onclick="addHeroImageByUrl()">Add from URL</button>
+      </div>
+    </div>
+    <div class="section">
+      <h2>Stats</h2>
+      <div id="statsList"></div>
+      <div class="form-row">
+        <input type="text" id="statValue" placeholder="Value (e.g. 100+)" />
+        <input type="text" id="statLabel" placeholder="Label (e.g. Over All Project)" />
+        <button onclick="addStat()">Add Stat</button>
+      </div>
+    </div>
+    <div class="section">
+      <h2>Navigation Items</h2>
+      <div id="navItemsList"></div>
+      <div class="form-row">
+        <input type="text" id="navItemLabel" placeholder="Label (e.g. Home)" />
+        <button onclick="addNavItem()">Add</button>
+      </div>
+    </div>
+    <div class="section">
+      <h2>Logos & Icons (upload or paste URL)</h2>
+      <label>Logo</label>
+      <div class="form-row">
+        <input type="file" id="heroLogoInput" accept="image/*" />
+        <input type="url" id="heroLogoUrl" placeholder="Logo URL" />
+      </div>
+      <label>Logo Background</label>
+      <div class="form-row">
+        <input type="file" id="heroLogoBgInput" accept="image/*" />
+        <input type="url" id="heroLogoBgUrl" placeholder="Logo background URL" />
+      </div>
+      <label>Brand Logo</label>
+      <div class="form-row">
+        <input type="file" id="heroBrandLogoInput" accept="image/*" />
+        <input type="url" id="heroBrandLogoUrl" placeholder="Brand logo URL" />
+      </div>
+      <label>Icon</label>
+      <div class="form-row">
+        <input type="file" id="heroIconInput" accept="image/*" />
+        <input type="url" id="heroIconUrl" placeholder="Icon URL" />
+      </div>
+      <label>Marquee Logo</label>
+      <div class="form-row">
+        <input type="file" id="heroMarqueeInput" accept="image/*" />
+        <input type="url" id="heroMarqueeUrl" placeholder="Marquee logo URL" />
+      </div>
+      <button onclick="saveHeroLogos()">Save Logos</button>
+    </div>
+    <div class="section">
+      <h2>Testimonial</h2>
+      <label>Quote</label>
+      <textarea id="testimonialQuote" placeholder="Customer quote"></textarea>
+      <label>Customer Name</label>
+      <input type="text" id="testimonialName" placeholder="Customer name" />
+      <label>Customer Title</label>
+      <input type="text" id="testimonialTitle" placeholder="Customer title" />
+      <label>Customer Image</label>
+      <div class="form-row">
+        <input type="file" id="testimonialImageInput" accept="image/*" />
+        <input type="url" id="testimonialImageUrl" placeholder="Image URL" />
+      </div>
+      <button onclick="saveTestimonial()">Save Testimonial</button>
+    </div>
+  </div>
+
+  <!-- Features (Partner Logos) -->
+  <div class="tab-content" id="tab-features">
+    <div class="section">
+      <h2>Badge & Heading</h2>
+      <label>Badge Text</label>
+      <input type="text" id="featuresBadge" placeholder="Trusted Partners" />
+      <label>Heading</label>
+      <input type="text" id="featuresHeading" placeholder="Work with Havier to tackle your toughest." />
+      <button onclick="saveFeaturesMeta()">Save</button>
+    </div>
+    <div class="section">
+      <h2>Partner Logos</h2>
+      <div class="item-list" id="partnerLogosList"></div>
+      <div class="form-row">
+        <input type="text" id="partnerName" placeholder="Partner name" />
+        <input type="file" id="partnerLogoInput" accept="image/*,video/*" />
+        <button onclick="addPartnerLogo()">Add Logo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Project (Features with images) -->
+  <div class="tab-content" id="tab-project">
+    <div class="section">
+      <h2>Badge, Heading & Subheading</h2>
+      <label>Badge Text</label>
+      <input type="text" id="projectBadge" placeholder="Who We Work With" />
+      <label>Heading</label>
+      <input type="text" id="projectHeading" placeholder="Heading" />
+      <label>Subheading</label>
+      <input type="text" id="projectSubheading" placeholder="Subheading" />
+      <button onclick="saveProjectMeta()">Save</button>
+    </div>
+    <div class="section">
+      <h2>Project Features</h2>
+      <div class="item-list" id="projectFeaturesList"></div>
+      <div class="form-row">
+        <input type="text" id="featureTitle" placeholder="Title" />
+        <input type="text" id="featureDesc" placeholder="Description" />
+        <input type="file" id="featureImageInput" accept="image/*,video/*" />
+        <button onclick="addProjectFeature()">Add Feature</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Latest Projects -->
+  <div class="tab-content" id="tab-latest">
+    <div class="section">
+      <h2>Heading & Subheading</h2>
+      <label>Heading</label>
+      <input type="text" id="latestHeading" placeholder="Latest Project Snapshot" />
+      <label>Subheading</label>
+      <input type="text" id="latestSubheading" placeholder="Subheading" />
+      <button onclick="saveLatestMeta()">Save</button>
+    </div>
+    <div class="section">
+      <h2>Latest Project Images</h2>
+      <div class="item-list" id="latestProjectsList"></div>
+      <div class="form-row">
+        <input type="text" id="latestAlt" placeholder="Alt text" />
+        <input type="file" id="latestImageInput" accept="image/*,video/*" />
+        <button onclick="addLatestProject()">Add Image</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Site Review -->
+  <div class="tab-content" id="tab-siteReview">
+    <div class="section">
+      <h2>Heading & Subheading</h2>
+      <label>Heading</label>
+      <input type="text" id="siteReviewHeading" placeholder="Let's review your site requirement" />
+      <label>Subheading</label>
+      <input type="text" id="siteReviewSubheading" placeholder="Subheading" />
+      <button onclick="saveSiteReviewMeta()">Save</button>
+    </div>
+    <div class="section">
+      <h2>Orbit Images</h2>
+      <div class="item-list" id="orbitImagesList"></div>
+      <div class="form-row">
+        <input type="file" id="orbitImageInput" accept="image/*,video/*" />
+        <button onclick="addOrbitImage()">Add Image</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contact -->
+  <div class="tab-content" id="tab-contact">
+    <div class="section">
+      <h2>Contact Section</h2>
+      <label>Heading</label>
+      <input type="text" id="contactHeading" placeholder="Speak With Our Team" />
+      <label>Description</label>
+      <textarea id="contactDescription" placeholder="Tell us about your project..."></textarea>
+      <label>Contact Video (upload or paste URL)</label>
+      <div class="form-row">
+        <input type="file" id="contactVideoInput" accept="video/*,image/*" />
+        <input type="url" id="contactVideoUrl" placeholder="Or paste video URL" />
+      </div>
+      <h3 style="margin:16px 0 8px;font-size:1rem;">Form Fields</h3>
+      <div id="formFieldsList"></div>
+      <div class="form-row">
+        <input type="text" id="formFieldPlaceholder" placeholder="Placeholder (e.g. Your Name)" />
+        <input type="text" id="formFieldType" placeholder="Type (text, email)" />
+        <input type="text" id="formFieldName" placeholder="Name (e.g. from_name)" />
+        <button onclick="addFormField()">Add Field</button>
+      </div>
+      <button onclick="saveContact()">Save Contact</button>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="tab-content" id="tab-footer">
+    <div class="section">
+      <h2>Brand & Logos</h2>
+      <label>Brand Name</label>
+      <input type="text" id="footerBrandName" placeholder="Plantorium" />
+      <label>Logo URL</label>
+      <div class="form-row">
+        <input type="file" id="footerLogoInput" accept="image/*" />
+        <input type="url" id="footerLogoUrl" placeholder="Logo URL" />
+      </div>
+      <label>Logo Background URL</label>
+      <input type="url" id="footerLogoBgUrl" placeholder="Logo background URL" />
+      <label>Footer Accent Image URL</label>
+      <input type="url" id="footerAccentUrl" placeholder="Accent image URL" />
+      <button onclick="saveFooterMeta()">Save</button>
+    </div>
+    <div class="section">
+      <h2>Social Media Links</h2>
+      <div class="item-list" id="socialLinksList"></div>
+      <div class="form-row">
+        <input type="text" id="socialName" placeholder="Platform (Instagram, Facebook, etc.)" />
+        <input type="url" id="socialUrl" placeholder="https://..." />
+        <button onclick="addSocialLink()">Add Link</button>
+      </div>
+    </div>
+    <div class="section">
+      <h2>Footer Tagline</h2>
+      <input type="text" id="footerTagline" placeholder="Working together to protect our planet..." />
+      <button onclick="saveFooter()">Save Footer</button>
+    </div>
+  </div>
+  </div>
+
+  <script>
+    const API = window.location.origin + '/api';
+    document.getElementById('apiBase').textContent = API;
+
+    function submitAdminKey() {
+      const input = document.getElementById('adminKeyInput');
+      const key = (input?.value ?? '').trim();
+      sessionStorage.setItem('adminKey', key);
+      document.getElementById('gateError').style.display = 'none';
+      document.getElementById('adminGate').style.display = 'none';
+      updateLogoutButton();
+    }
+
+    function logoutAdmin() {
+      sessionStorage.removeItem('adminKey');
+      updateLogoutButton();
+      showMsg('Logged out. You will need to enter the key again to save or upload.');
+    }
+
+    function updateLogoutButton() {
+      const btn = document.getElementById('logoutBtn');
+      if (btn) btn.style.display = sessionStorage.getItem('adminKey') !== null ? 'block' : 'none';
+    }
+
+    function showGate() {
+      sessionStorage.removeItem('adminKey');
+      updateLogoutButton();
+      document.getElementById('adminGate').style.display = 'flex';
+      document.getElementById('adminKeyInput').value = '';
+    }
+
+    function loadContent() {
+      setTabLoading(activeTab, true);
+      fetchContent()
+        .then(d => { content = d; setTabLoading(activeTab, false); renderTab(activeTab); updateLogoutButton(); })
+        .catch(() => { setTabLoading(activeTab, false); showMsg('Could not load content. Is the server running?', 'error'); updateLogoutButton(); });
+    }
+
+    function handleApiError(e) {
+      if (e.status === 401) {
+        showGate();
+        document.getElementById('gateError').textContent = 'Session expired. Enter key again.';
+        document.getElementById('gateError').style.display = 'block';
+      } else {
+        showMsg(e.message || 'Error', 'error');
+      }
+    }
+
+    function escapeHtml(str) {
+      if (str == null) return '';
+      const s = String(str);
+      const div = document.createElement('div');
+      div.textContent = s;
+      return div.innerHTML;
+    }
+    function safeUrl(url) {
+      if (!url || typeof url !== 'string') return '#';
+      const u = url.trim().toLowerCase();
+      if (u.startsWith('javascript:') || u.startsWith('data:')) return '#';
+      if (url.startsWith('/')) return window.location.origin + url;
+      return url;
+    }
+    function isVideoUrl(url) {
+      if (!url) return false;
+      const u = url.toLowerCase();
+      return /\.(mp4|webm|mov|ogg|m4v)$/.test(u) || u.includes('/video/');
+    }
+    function mediaCard(url, label, deleteOnclick, sectionId, index) {
+      if (!url) return '';
+      const resolved = typeof url === 'string' ? url : (url.url || url.src || '');
+      const safe = safeUrl(resolved);
+      if (safe === '#') return '';
+      const src = safe.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const isVideo = isVideoUrl(resolved);
+      const cbId = sectionId + '_' + index;
+      const media = isVideo
+        ? `<video src="${src}" muted playsinline preload="metadata"></video>`
+        : `<img src="${src}" alt="${escapeHtml(label)}" loading="lazy" />`;
+      return `<div class="media-card" data-section="${sectionId}" data-index="${index}">
+        <input type="checkbox" class="select-cb" id="cb_${cbId}" onchange="toggleCardSelect(this)" title="Select to remove" />
+        ${media}
+        <button class="delete-btn danger" onclick="${deleteOnclick}" title="Delete">×</button>
+        <span class="media-label">${escapeHtml(label)}</span>
+      </div>`;
+    }
+    function toggleCardSelect(cb) {
+      const card = cb.closest('.media-card');
+      if (card) card.classList.toggle('selected', cb.checked);
+    }
+    function removeSelected(sectionId) {
+      const cards = document.querySelectorAll('.media-card[data-section="' + sectionId + '"]');
+      const indices = [];
+      cards.forEach(c => { if (c.querySelector('.select-cb')?.checked) indices.push(parseInt(c.dataset.index)); });
+      indices.sort((a,b) => b - a);
+      if (indices.length === 0) { showMsg('Select items to remove', 'error'); return; }
+      const removeFns = {
+        heroImages: () => { const hero = { ...content.hero }; hero.sliderImages = (hero.sliderImages || []).filter((_, j) => !indices.includes(j)); saveContent({ hero }).then(d => { content = d; renderTab('hero'); showMsg('Removed ' + indices.length + ' item(s)'); }).catch(handleApiError); },
+        partnerLogos: () => { const f = { ...content.features }; f.partnerLogos = (f.partnerLogos || []).filter((_, j) => !indices.includes(j)); saveContent({ features: f }).then(d => { content = d; renderTab('features'); showMsg('Removed ' + indices.length + ' item(s)'); }).catch(handleApiError); },
+        projectFeatures: () => { const p = { ...content.project }; p.features = (p.features || []).filter((_, j) => !indices.includes(j)); saveContent({ project: p }).then(d => { content = d; renderTab('project'); showMsg('Removed ' + indices.length + ' item(s)'); }).catch(handleApiError); },
+        latestImages: () => { const l = { ...content.latest }; l.projectImages = (l.projectImages || []).filter((_, j) => !indices.includes(j)); saveContent({ latest: l }).then(d => { content = d; renderTab('latest'); showMsg('Removed ' + indices.length + ' item(s)'); }).catch(handleApiError); },
+        orbitImages: () => { const sr = { ...content.siteReview }; sr.orbitImages = (sr.orbitImages || []).filter((_, j) => !indices.includes(j)); saveContent({ siteReview: sr }).then(d => { content = d; renderTab('siteReview'); showMsg('Removed ' + indices.length + ' item(s)'); }).catch(handleApiError); }
+      };
+      if (removeFns[sectionId]) removeFns[sectionId]();
+    }
+
+    function showMsg(text, type = 'info') {
+      const el = document.getElementById('msg');
+      el.textContent = text;
+      el.className = 'msg ' + type;
+      el.style.display = 'block';
+      setTimeout(() => { el.style.display = 'none'; }, 4000);
+    }
+
+    function apiHeaders(json) {
+      const h = {};
+      if (json) h['Content-Type'] = 'application/json';
+      const key = sessionStorage.getItem('adminKey');
+      if (key) h['X-Admin-Key'] = key;
+      return h;
+    }
+
+    async function checkRes(res, msg) {
+      if (!res.ok) {
+        const err = new Error(msg || 'Request failed');
+        err.status = res.status;
+        try {
+          const body = await res.json();
+          if (body.error) err.message = body.error;
+        } catch (_) {}
+        throw err;
+      }
+    }
+
+    async function fetchContent() {
+      const res = await fetch(API + '/content', { headers: apiHeaders() });
+      await checkRes(res, 'Failed to fetch');
+      return res.json();
+    }
+
+    async function saveContent(updates) {
+      const res = await fetch(API + '/content', {
+        method: 'PUT',
+        headers: apiHeaders(true),
+        body: JSON.stringify(updates),
+      });
+      await checkRes(res, 'Failed to save');
+      return res.json();
+    }
+
+    async function uploadFile(file, section) {
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('section', section);
+      const opts = { method: 'POST', body: fd };
+      const key = sessionStorage.getItem('adminKey');
+      if (key) opts.headers = { 'X-Admin-Key': key };
+      const res = await fetch(API + '/content/upload', opts);
+      await checkRes(res, 'Upload failed');
+      const data = await res.json();
+      return data.url;
+    }
+
+    async function uploadFromUrl(url, section) {
+      if (!url || !url.startsWith('http')) return url;
+      const opts = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Key': sessionStorage.getItem('adminKey') || '' },
+        body: JSON.stringify({ url, section })
+      };
+      const res = await fetch(API + '/content/upload-from-url', opts);
+      await checkRes(res, 'Upload from URL failed');
+      const data = await res.json();
+      return data.url;
+    }
+
+    let content = {};
+    let activeTab = 'hero';
+
+    function setTabLoading(tabId, loading) {
+      const listIds = {
+        hero: 'heroImagesList',
+        features: 'partnerLogosList',
+        project: 'projectFeaturesList',
+        latest: 'latestProjectsList',
+        siteReview: 'orbitImagesList'
+      };
+      const id = listIds[tabId];
+      if (id && loading) {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = '<p style="color:#758195;font-size:14px;">Loading...</p>';
+      }
+    }
+
+    function renderTab(tabId) {
+      if (tabId === 'hero') {
+        const hero = content.hero || {};
+        document.getElementById('heroMainHeading').value = hero.mainHeading || '';
+        const heroImages = hero.sliderImages || [];
+        document.getElementById('heroImagesList').innerHTML = heroImages.length
+          ? `<div class="select-actions"><button class="secondary" onclick="document.querySelectorAll('#heroImagesList .select-cb').forEach(c=>c.checked=true);document.querySelectorAll('#heroImagesList .media-card').forEach(c=>c.classList.add(\'selected\'));">Select all</button><button class="secondary" onclick="document.querySelectorAll('#heroImagesList .select-cb').forEach(c=>c.checked=false);document.querySelectorAll('#heroImagesList .media-card').forEach(c=>c.classList.remove(\'selected\'));">Deselect all</button><button class="danger" onclick="removeSelected(\'heroImages\')">Remove selected</button><span class="count">Check items to remove from site</span></div><div class="media-grid">${heroImages.map((url, i) => mediaCard(url, `Slide ${i + 1}`, `removeHeroImage(${i})`, 'heroImages', i)).join('')}</div>`
+          : '<p style="color:#758195;font-size:14px;">No images or videos yet. Add some above.</p>';
+        document.getElementById('statsList').innerHTML = (hero.statsData || []).map((s, i) => `
+          <div class="item-card"><div class="info"><span><strong>${escapeHtml(s.value)}</strong> - ${escapeHtml(s.label)}</span></div>
+          <div class="actions"><button class="danger" onclick="removeStat(${i})">Remove</button></div></div>
+        `).join('') || '<p style="color:#758195;font-size:14px;">No stats yet.</p>';
+        document.getElementById('navItemsList').innerHTML = (hero.navigationItems || []).map((item, i) => `
+          <div class="item-card"><div class="info"><span>${escapeHtml(item.label)}</span></div>
+          <div class="actions"><button class="danger" onclick="removeNavItem(${i})">Remove</button></div></div>
+        `).join('') || '<p style="color:#758195;font-size:14px;">No nav items yet.</p>';
+        document.getElementById('heroLogoUrl').value = hero.logoUrl || '';
+        document.getElementById('heroLogoBgUrl').value = hero.logoBackgroundUrl || '';
+        document.getElementById('heroBrandLogoUrl').value = hero.brandLogoUrl || '';
+        document.getElementById('heroIconUrl').value = hero.iconUrl || '';
+        document.getElementById('heroMarqueeUrl').value = hero.marqueeLogoUrl || '';
+        const t = hero.testimonial || {};
+        document.getElementById('testimonialQuote').value = t.quote || '';
+        document.getElementById('testimonialName').value = t.customerName || '';
+        document.getElementById('testimonialTitle').value = t.customerTitle || '';
+        document.getElementById('testimonialImageUrl').value = t.customerImageUrl || '';
+      } else if (tabId === 'features') {
+        const f = content.features || {};
+        document.getElementById('featuresBadge').value = f.badgeText || '';
+        document.getElementById('featuresHeading').value = f.heading || '';
+        const logos = f.partnerLogos || [];
+        document.getElementById('partnerLogosList').innerHTML = logos.length
+          ? `<div class="select-actions"><button class="secondary" onclick="document.querySelectorAll('#partnerLogosList .select-cb').forEach(c=>c.checked=true);document.querySelectorAll('#partnerLogosList .media-card').forEach(c=>c.classList.add(\'selected\'));">Select all</button><button class="secondary" onclick="document.querySelectorAll('#partnerLogosList .select-cb').forEach(c=>c.checked=false);document.querySelectorAll('#partnerLogosList .media-card').forEach(c=>c.classList.remove(\'selected\'));">Deselect all</button><button class="danger" onclick="removeSelected(\'partnerLogos\')">Remove selected</button><span class="count">Check items to remove</span></div><div class="media-grid">${logos.map((p, i) => mediaCard(p.src, p.name || 'Logo', `removePartnerLogo(${i})`, 'partnerLogos', i)).join('')}</div>`
+          : '<p style="color:#758195;font-size:14px;">No partner logos yet.</p>';
+      } else if (tabId === 'project') {
+        const p = content.project || {};
+        document.getElementById('projectBadge').value = p.badgeText || '';
+        document.getElementById('projectHeading').value = p.heading || '';
+        document.getElementById('projectSubheading').value = p.subheading || '';
+        const feats = p.features || [];
+        document.getElementById('projectFeaturesList').innerHTML = feats.length
+          ? `<div class="select-actions"><button class="secondary" onclick="document.querySelectorAll('#projectFeaturesList .select-cb').forEach(c=>c.checked=true);document.querySelectorAll('#projectFeaturesList .media-card').forEach(c=>c.classList.add(\'selected\'));">Select all</button><button class="secondary" onclick="document.querySelectorAll('#projectFeaturesList .select-cb').forEach(c=>c.checked=false);document.querySelectorAll('#projectFeaturesList .media-card').forEach(c=>c.classList.remove(\'selected\'));">Deselect all</button><button class="danger" onclick="removeSelected(\'projectFeatures\')">Remove selected</button><span class="count">Check items to remove</span></div><div class="media-grid">${feats.map((f, i) => mediaCard(f.image, f.title || 'Feature', `removeProjectFeature(${i})`, 'projectFeatures', i)).join('')}</div>`
+          : '<p style="color:#758195;font-size:14px;">No features yet.</p>';
+      } else if (tabId === 'latest') {
+        const l = content.latest || {};
+        document.getElementById('latestHeading').value = l.heading || '';
+        document.getElementById('latestSubheading').value = l.subheading || '';
+        const imgs = l.projectImages || [];
+        document.getElementById('latestProjectsList').innerHTML = imgs.length
+          ? `<div class="select-actions"><button class="secondary" onclick="document.querySelectorAll('#latestProjectsList .select-cb').forEach(c=>c.checked=true);document.querySelectorAll('#latestProjectsList .media-card').forEach(c=>c.classList.add(\'selected\'));">Select all</button><button class="secondary" onclick="document.querySelectorAll('#latestProjectsList .select-cb').forEach(c=>c.checked=false);document.querySelectorAll('#latestProjectsList .media-card').forEach(c=>c.classList.remove(\'selected\'));">Deselect all</button><button class="danger" onclick="removeSelected(\'latestImages\')">Remove selected</button><span class="count">Check items to remove</span></div><div class="media-grid">${imgs.map((img, i) => mediaCard(img.src, img.alt || 'Image ' + (i+1), `removeLatestProject(${i})`, 'latestImages', i)).join('')}</div>`
+          : '<p style="color:#758195;font-size:14px;">No images yet.</p>';
+      } else if (tabId === 'siteReview') {
+        const sr = content.siteReview || {};
+        document.getElementById('siteReviewHeading').value = sr.heading || '';
+        document.getElementById('siteReviewSubheading').value = sr.subheading || '';
+        const orbits = sr.orbitImages || [];
+        document.getElementById('orbitImagesList').innerHTML = orbits.length
+          ? `<div class="select-actions"><button class="secondary" onclick="document.querySelectorAll('#orbitImagesList .select-cb').forEach(c=>c.checked=true);document.querySelectorAll('#orbitImagesList .media-card').forEach(c=>c.classList.add(\'selected\'));">Select all</button><button class="secondary" onclick="document.querySelectorAll('#orbitImagesList .select-cb').forEach(c=>c.checked=false);document.querySelectorAll('#orbitImagesList .media-card').forEach(c=>c.classList.remove(\'selected\'));">Deselect all</button><button class="danger" onclick="removeSelected(\'orbitImages\')">Remove selected</button><span class="count">Check items to remove</span></div><div class="media-grid">${orbits.map((url, i) => mediaCard(url, 'Orbit ' + (i+1), `removeOrbitImage(${i})`, 'orbitImages', i)).join('')}</div>`
+          : '<p style="color:#758195;font-size:14px;">No orbit images yet.</p>';
+      } else if (tabId === 'contact') {
+        const c = content.contact || {};
+        document.getElementById('contactHeading').value = c.heading || '';
+        document.getElementById('contactDescription').value = c.description || '';
+        document.getElementById('contactVideoUrl').value = c.videoUrl || '';
+        document.getElementById('formFieldsList').innerHTML = (c.formFields || []).map((f, i) => `
+          <div class="item-card"><div class="info"><span><strong>${escapeHtml(f.placeholder)}</strong> — ${escapeHtml(f.type)} / ${escapeHtml(f.name)}</span></div>
+          <div class="actions"><button class="danger" onclick="removeFormField(${i})">Remove</button></div></div>
+        `).join('') || '<p style="color:#758195;font-size:14px;">No form fields. Using defaults.</p>';
+      } else if (tabId === 'footer') {
+        const fo = content.footer || {};
+        document.getElementById('footerBrandName').value = fo.brandName || '';
+        document.getElementById('footerLogoUrl').value = fo.logoUrl || '';
+        document.getElementById('footerLogoBgUrl').value = fo.logoBackgroundUrl || '';
+        document.getElementById('footerAccentUrl').value = fo.footerAccentImage || '';
+        document.getElementById('socialLinksList').innerHTML = (fo.socialLinks || []).map((s, i) => `
+          <div class="item-card"><div class="info"><span><strong>${escapeHtml(s.name)}</strong><br>${escapeHtml(s.url || '#')}</span></div>
+          <div class="actions"><button class="danger" onclick="removeSocialLink(${i})">Remove</button></div></div>
+        `).join('') || '<p style="color:#758195;font-size:14px;">No social links yet.</p>';
+        document.getElementById('footerTagline').value = fo.tagline || '';
+      }
+    }
+
+    async function saveHeroHeading() {
+      try {
+        const mainHeading = document.getElementById('heroMainHeading').value.trim();
+        const hero = { ...content.hero, mainHeading };
+        content = await saveContent({ hero });
+        renderTab('hero');
+        showMsg('Heading saved', 'success');
+      } catch (e) { handleApiError(e); }
+    }
+
+    function addNavItem() {
+      const label = document.getElementById('navItemLabel').value.trim();
+      if (!label) { showMsg('Enter label', 'error'); return; }
+      const hero = content.hero || {};
+      hero.navigationItems = hero.navigationItems || [];
+      hero.navigationItems.push({ label });
+      saveContent({ hero }).then(d => { content = d; renderTab('hero'); document.getElementById('navItemLabel').value = ''; showMsg('Nav item added', 'success'); }).catch(handleApiError);
+    }
+    function removeNavItem(i) {
+      const hero = { ...content.hero };
+      hero.navigationItems = (hero.navigationItems || []).filter((_, j) => j !== i);
+      saveContent({ hero }).then(d => { content = d; renderTab('hero'); showMsg('Removed'); }).catch(handleApiError);
+    }
+
+    async function saveHeroLogos() {
+      try {
+      const hero = { ...content.hero };
+      let logoUrl = document.getElementById('heroLogoUrl').value.trim();
+      let logoBgUrl = document.getElementById('heroLogoBgUrl').value.trim();
+      let brandLogoUrl = document.getElementById('heroBrandLogoUrl').value.trim();
+      let iconUrl = document.getElementById('heroIconUrl').value.trim();
+      let marqueeUrl = document.getElementById('heroMarqueeUrl').value.trim();
+      const inputs = [
+        { id: 'heroLogoInput', url: logoUrl, section: 'heroLogo' },
+        { id: 'heroLogoBgInput', url: logoBgUrl, section: 'heroLogoBg' },
+        { id: 'heroBrandLogoInput', url: brandLogoUrl, section: 'heroBrandLogo' },
+        { id: 'heroIconInput', url: iconUrl, section: 'heroIcon' },
+        { id: 'heroMarqueeInput', url: marqueeUrl, section: 'heroMarquee' }
+      ];
+      for (const { id, url, section } of inputs) {
+        const input = document.getElementById(id);
+        if (input?.files?.length) {
+          try {
+            const u = await uploadFile(input.files[0], section);
+            if (section === 'heroLogo') hero.logoUrl = u;
+            else if (section === 'heroLogoBg') hero.logoBackgroundUrl = u;
+            else if (section === 'heroBrandLogo') hero.brandLogoUrl = u;
+            else if (section === 'heroIcon') hero.iconUrl = u;
+            else if (section === 'heroMarquee') hero.marqueeLogoUrl = u;
+            input.value = '';
+          } catch (e) { handleApiError(e); return; }
+        } else if (url) {
+          try {
+            const cloudinaryUrl = await uploadFromUrl(url, section);
+            if (section === 'heroLogo') hero.logoUrl = cloudinaryUrl;
+            else if (section === 'heroLogoBg') hero.logoBackgroundUrl = cloudinaryUrl;
+            else if (section === 'heroBrandLogo') hero.brandLogoUrl = cloudinaryUrl;
+            else if (section === 'heroIcon') hero.iconUrl = cloudinaryUrl;
+            else if (section === 'heroMarquee') hero.marqueeLogoUrl = cloudinaryUrl;
+          } catch (e) { handleApiError(e); return; }
+        }
+      }
+        content = await saveContent({ hero });
+        renderTab('hero');
+        showMsg('Logos saved', 'success');
+      } catch (e) { handleApiError(e); }
+    }
+
+    async function saveTestimonial() {
+      try {
+        const hero = { ...content.hero };
+        hero.testimonial = hero.testimonial || {};
+        hero.testimonial.quote = document.getElementById('testimonialQuote').value.trim();
+        hero.testimonial.customerName = document.getElementById('testimonialName').value.trim();
+        hero.testimonial.customerTitle = document.getElementById('testimonialTitle').value.trim();
+        let imgUrl = document.getElementById('testimonialImageUrl').value.trim();
+        const input = document.getElementById('testimonialImageInput');
+        if (input?.files?.length) {
+          imgUrl = await uploadFile(input.files[0], 'testimonial');
+          input.value = '';
+        } else if (imgUrl && imgUrl.startsWith('http')) {
+          imgUrl = await uploadFromUrl(imgUrl, 'testimonial');
+        }
+        hero.testimonial.customerImageUrl = imgUrl || hero.testimonial.customerImageUrl;
+        content = await saveContent({ hero });
+        renderTab('hero');
+        showMsg('Testimonial saved', 'success');
+      } catch (e) { handleApiError(e); }
+    }
+
+    async function addHeroImage() {
+      const input = document.getElementById('heroImageInput');
+      if (!input.files?.length) { showMsg('Select an image', 'error'); return; }
+      try {
+        const url = await uploadFile(input.files[0], 'heroSlider');
+        const hero = content.hero || {};
+        hero.sliderImages = hero.sliderImages || [];
+        hero.sliderImages.push(url);
+        content = await saveContent({ hero });
+        input.value = '';
+        renderTab('hero');
+        showMsg('Image added to Cloudinary and saved', 'success');
+      } catch (e) { handleApiError(e); }
+    }
+    async function addHeroImageByUrl() {
+      const urlInput = document.getElementById('heroImageUrl');
+      const url = urlInput?.value?.trim();
+      if (!url || !url.startsWith('http')) { showMsg('Enter a valid image URL', 'error'); return; }
+      try {
+        const cloudinaryUrl = await uploadFromUrl(url, 'heroSlider');
+        const hero = content.hero || {};
+        hero.sliderImages = hero.sliderImages || [];
+        hero.sliderImages.push(cloudinaryUrl);
+        content = await saveContent({ hero });
+        urlInput.value = '';
+        renderTab('hero');
+        showMsg('Image uploaded to Cloudinary and saved', 'success');
+      } catch (e) { handleApiError(e); }
+    }
+    function removeHeroImage(i) {
+      const hero = { ...content.hero };
+      hero.sliderImages = (hero.sliderImages || []).filter((_, j) => j !== i);
+      saveContent({ hero }).then(d => { content = d; renderTab('hero'); showMsg('Removed'); }).catch(handleApiError);
+    }
+
+    function addStat() {
+      const v = document.getElementById('statValue').value.trim();
+      const l = document.getElementById('statLabel').value.trim();
+      if (!v || !l) { showMsg('Fill value and label', 'error'); return; }
+      const hero = content.hero || {};
+      hero.statsData = hero.statsData || [];
+      hero.statsData.push({ value: v, label: l });
+      saveContent({ hero }).then(d => { content = d; renderTab('hero'); document.getElementById('statValue').value = ''; document.getElementById('statLabel').value = ''; showMsg('Stat added', 'success'); }).catch(handleApiError);
+    }
+    function removeStat(i) {
+      const hero = { ...content.hero };
+      hero.statsData = (hero.statsData || []).filter((_, j) => j !== i);
+      saveContent({ hero }).then(d => { content = d; renderTab('hero'); showMsg('Removed'); }).catch(handleApiError);
+    }
+
+    async function saveFeaturesMeta() {
+      try {
+        const features = { ...content.features };
+        features.badgeText = document.getElementById('featuresBadge').value.trim();
+        features.heading = document.getElementById('featuresHeading').value.trim();
+        content = await saveContent({ features });
+        renderTab('features');
+        showMsg('Saved', 'success');
+      } catch (e) { handleApiError(e); }
+    }
+
+    async function addPartnerLogo() {
+      const name = document.getElementById('partnerName').value.trim();
+      const input = document.getElementById('partnerLogoInput');
+      if (!name || !input.files?.length) { showMsg('Enter name and select image', 'error'); return; }
+      try {
+        const url = await uploadFile(input.files[0], 'partnerLogo');
+        const features = content.features || {};
+        features.partnerLogos = features.partnerLogos || [];
+        features.partnerLogos.push({ name, src: url });
+        content = await saveContent({ features });
+        document.getElementById('partnerName').value = '';
+        input.value = '';
+        renderTab('features');
+        showMsg('Logo added', 'success');
+      } catch (e) { handleApiError(e); }
+    }
+    function removePartnerLogo(i) {
+      const features = { ...content.features };
+      features.partnerLogos = (features.partnerLogos || []).filter((_, j) => j !== i);
+      saveContent({ features }).then(d => { content = d; renderTab('features'); showMsg('Removed'); }).catch(handleApiError);
+    }
+
+    async function saveProjectMeta() {
+      try {
+        const project = { ...content.project };
+        project.badgeText = document.getElementById('projectBadge').value.trim();
+        project.heading = document.getElementById('projectHeading').value.trim();
+        project.subheading = document.getElementById('projectSubheading').value.trim();
+        content = await saveContent({ project });
+        renderTab('project');
+        showMsg('Saved', 'success');
+      } catch (e) { handleApiError(e); }
+    }
+
+    async function addProjectFeature() {
+      const title = document.getElementById('featureTitle').value.trim();
+      const desc = document.getElementById('featureDesc').value.trim();
+      const input = document.getElementById('featureImageInput');
+      if (!title || !desc || !input.files?.length) { showMsg('Fill all fields and select image', 'error'); return; }
+      try {
+        const url = await uploadFile(input.files[0], 'projectFeature');
+        const project = content.project || {};
+        project.features = project.features || [];
+        project.features.push({ title, description: desc, image: url });
+        content = await saveContent({ project });
+        document.getElementById('featureTitle').value = '';
+        document.getElementById('featureDesc').value = '';
+        input.value = '';
+        renderTab('project');
+        showMsg('Feature added', 'success');
+      } catch (e) { handleApiError(e); }
+    }
+    function removeProjectFeature(i) {
+      const project = { ...content.project };
+      project.features = (project.features || []).filter((_, j) => j !== i);
+      saveContent({ project }).then(d => { content = d; renderTab('project'); showMsg('Removed'); }).catch(handleApiError);
+    }
+
+    async function saveLatestMeta() {
+      try {
+        const latest = { ...content.latest };
+        latest.heading = document.getElementById('latestHeading').value.trim();
+        latest.subheading = document.getElementById('latestSubheading').value.trim();
+        content = await saveContent({ latest });
+        renderTab('latest');
+        showMsg('Saved', 'success');
+      } catch (e) { handleApiError(e); }
+    }
+
+    async function addLatestProject() {
+      const alt = document.getElementById('latestAlt').value.trim() || 'Project image';
+      const input = document.getElementById('latestImageInput');
+      if (!input.files?.length) { showMsg('Select an image', 'error'); return; }
+      try {
+        const url = await uploadFile(input.files[0], 'latestProject');
+        const latest = content.latest || {};
+        latest.projectImages = latest.projectImages || [];
+        latest.projectImages.push({ src: url, alt });
+        content = await saveContent({ latest });
+        document.getElementById('latestAlt').value = '';
+        input.value = '';
+        renderTab('latest');
+        showMsg('Image added', 'success');
+      } catch (e) { handleApiError(e); }
+    }
+    function removeLatestProject(i) {
+      const latest = { ...content.latest };
+      latest.projectImages = (latest.projectImages || []).filter((_, j) => j !== i);
+      saveContent({ latest }).then(d => { content = d; renderTab('latest'); showMsg('Removed'); }).catch(handleApiError);
+    }
+
+    async function saveSiteReviewMeta() {
+      try {
+        const siteReview = { ...content.siteReview };
+        siteReview.heading = document.getElementById('siteReviewHeading').value.trim();
+        siteReview.subheading = document.getElementById('siteReviewSubheading').value.trim();
+        content = await saveContent({ siteReview });
+        renderTab('siteReview');
+        showMsg('Saved', 'success');
+      } catch (e) { handleApiError(e); }
+    }
+
+    async function addOrbitImage() {
+      const input = document.getElementById('orbitImageInput');
+      if (!input.files?.length) { showMsg('Select an image', 'error'); return; }
+      try {
+        const url = await uploadFile(input.files[0], 'orbitImage');
+        const siteReview = content.siteReview || {};
+        siteReview.orbitImages = siteReview.orbitImages || [];
+        siteReview.orbitImages.push(url);
+        content = await saveContent({ siteReview });
+        input.value = '';
+        renderTab('siteReview');
+        showMsg('Image added', 'success');
+      } catch (e) { handleApiError(e); }
+    }
+    function removeOrbitImage(i) {
+      const siteReview = { ...content.siteReview };
+      siteReview.orbitImages = (siteReview.orbitImages || []).filter((_, j) => j !== i);
+      saveContent({ siteReview }).then(d => { content = d; renderTab('siteReview'); showMsg('Removed'); }).catch(handleApiError);
+    }
+
+    function addFormField() {
+      const placeholder = document.getElementById('formFieldPlaceholder').value.trim();
+      const type = document.getElementById('formFieldType').value.trim() || 'text';
+      const name = document.getElementById('formFieldName').value.trim();
+      if (!placeholder || !name) { showMsg('Enter placeholder and name', 'error'); return; }
+      const contact = content.contact || {};
+      contact.formFields = contact.formFields || [];
+      contact.formFields.push({ placeholder, type, name });
+      saveContent({ contact }).then(d => { content = d; renderTab('contact'); document.getElementById('formFieldPlaceholder').value = ''; document.getElementById('formFieldType').value = ''; document.getElementById('formFieldName').value = ''; showMsg('Field added', 'success'); }).catch(handleApiError);
+    }
+    function removeFormField(i) {
+      const contact = { ...content.contact };
+      contact.formFields = (contact.formFields || []).filter((_, j) => j !== i);
+      saveContent({ contact }).then(d => { content = d; renderTab('contact'); showMsg('Removed'); }).catch(handleApiError);
+    }
+
+    async function saveContact() {
+      try {
+        const heading = document.getElementById('contactHeading').value.trim();
+        const description = document.getElementById('contactDescription').value.trim();
+        let videoUrl = document.getElementById('contactVideoUrl').value.trim();
+        const input = document.getElementById('contactVideoInput');
+        if (input.files?.length) {
+          videoUrl = await uploadFile(input.files[0], 'contactVideo');
+          input.value = '';
+        } else if (videoUrl && videoUrl.startsWith('http')) {
+          videoUrl = await uploadFromUrl(videoUrl, 'contactVideo');
+        }
+        const contact = { ...content.contact, heading, description, videoUrl: videoUrl || content.contact?.videoUrl };
+        content = await saveContent({ contact });
+        renderTab('contact');
+        showMsg('Contact saved', 'success');
+      } catch (e) { handleApiError(e); }
+    }
+
+    async function saveFooterMeta() {
+      try {
+        const footer = { ...content.footer };
+        footer.brandName = document.getElementById('footerBrandName').value.trim();
+        let logoBgUrl = document.getElementById('footerLogoBgUrl').value.trim();
+        if (logoBgUrl && logoBgUrl.startsWith('http')) {
+          logoBgUrl = await uploadFromUrl(logoBgUrl, 'footerLogoBg');
+        }
+        footer.logoBackgroundUrl = logoBgUrl || footer.logoBackgroundUrl;
+        let accentUrl = document.getElementById('footerAccentUrl').value.trim();
+        if (accentUrl && accentUrl.startsWith('http')) {
+          accentUrl = await uploadFromUrl(accentUrl, 'footerAccent');
+        }
+        footer.footerAccentImage = accentUrl || footer.footerAccentImage;
+        let logoUrl = document.getElementById('footerLogoUrl').value.trim();
+        const input = document.getElementById('footerLogoInput');
+        if (input?.files?.length) {
+          logoUrl = await uploadFile(input.files[0], 'footerLogo');
+          input.value = '';
+        } else if (logoUrl && logoUrl.startsWith('http')) {
+          logoUrl = await uploadFromUrl(logoUrl, 'footerLogo');
+        }
+        footer.logoUrl = logoUrl || footer.logoUrl;
+        content = await saveContent({ footer });
+        renderTab('footer');
+        showMsg('Footer meta saved', 'success');
+      } catch (e) { handleApiError(e); }
+    }
+
+    function addSocialLink() {
+      const name = document.getElementById('socialName').value.trim();
+      const url = document.getElementById('socialUrl').value.trim();
+      if (!name) { showMsg('Enter platform name', 'error'); return; }
+      const footer = content.footer || {};
+      footer.socialLinks = footer.socialLinks || [];
+      footer.socialLinks.push({ name, url: url || '#' });
+      saveContent({ footer }).then(d => { content = d; renderTab('footer'); document.getElementById('socialName').value = ''; document.getElementById('socialUrl').value = ''; showMsg('Link added', 'success'); }).catch(handleApiError);
+    }
+    function removeSocialLink(i) {
+      const footer = { ...content.footer };
+      footer.socialLinks = (footer.socialLinks || []).filter((_, j) => j !== i);
+      saveContent({ footer }).then(d => { content = d; renderTab('footer'); showMsg('Removed'); }).catch(handleApiError);
+    }
+
+    async function saveFooter() {
+      try {
+        const tagline = document.getElementById('footerTagline').value.trim();
+        const footer = { ...content.footer, tagline };
+        content = await saveContent({ footer });
+        renderTab('footer');
+        showMsg('Footer saved', 'success');
+      } catch (e) { handleApiError(e); }
+    }
+
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const tabId = tab.dataset.tab;
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById('tab-' + tabId).classList.add('active');
+        activeTab = tabId;
+        setTabLoading(tabId, true);
+        fetchContent()
+          .then(d => { content = d; setTabLoading(tabId, false); renderTab(tabId); })
+          .catch(() => { setTabLoading(tabId, false); showMsg('Could not fetch content', 'error'); });
+      });
+    });
+
+    (function init() {
+      document.getElementById('adminGate').style.display = 'none';
+      activeTab = 'hero';
+      loadContent();
+    })();
+  </script>
+</body>
+</html>
